@@ -102,17 +102,34 @@ function addLine(role, text) {
 
 function playAll() {
   stopRead();
-  const blocks = Array.from(document.querySelectorAll(".line span:last-child"));
+  const lines = Array.from(document.querySelectorAll(".line"));
   let i = 0;
 
   function speakNext() {
-    if (i >= blocks.length) return;
-    const utter = new SpeechSynthesisUtterance(blocks[i].textContent);
+    if (i >= lines.length) return;
+
+    const role = lines[i].querySelector(".role").textContent;
+    const text = lines[i].querySelector("span:last-child").textContent;
+
+    const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "ja-JP";
+
+    if (role === "ボケ") {
+      utter.pitch = 1.25;
+      utter.rate = 1.05;
+    } else if (role === "ツッコミ") {
+      utter.pitch = 0.85;
+      utter.rate = 1.15;
+    } else {
+      utter.pitch = 1.0;
+      utter.rate = 0.95;
+    }
+
     utter.onend = function() {
       i++;
-      setTimeout(speakNext, 200);
+      setTimeout(speakNext, 250);
     };
+
     speechSynthesis.speak(utter);
   }
 
