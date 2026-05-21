@@ -79,6 +79,7 @@ button {
 <br>
 
 <button onclick="generate()">漫才化</button>
+<button onclick="generateAI()">AIツッコミ生成</button>
 <button onclick="playAll()">全部読む</button>
 <button onclick="stopRead()">停止</button>
 
@@ -189,7 +190,38 @@ function playAll() {
 function stopRead() {
   speechSynthesis.cancel();
 }
-</script>
+async function generateAI() {
+  const text = document.getElementById("script").value;
+  const mode = document.getElementById("mode") ? document.getElementById("mode").value : "tsukkomi";
+  const output = document.getElementById("output");
+
+  output.innerHTML = "";
+  addLine("案内", "AIツッコミ先生が考えています");
+
+  try {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ text, mode })
+    });
+
+    const data = await res.json();
+    output.innerHTML = "";
+
+    if (!data.items) {
+      addLine("エラー", "AI生成に失敗しました");
+      return;
+    }
+
+    data.items.forEach(item => {
+      addLine(item.role, item.text);
+    });
+
+  } catch (e) {
+    output.innerHTML = "";
+    addLine("エラー", "通信に失敗しました");
+  }
+}</script>
 
 </body>
 </html>
