@@ -63,15 +63,14 @@ button {
 
 <h1>漫才リーダー</h1>
 
-<div class="toolbar">
-  <select id="mode">
-    <option value="principal">校長先生皮肉</option>
-    <option value="consultant">冷酷コンサル</option>
-    <option value="radio">深夜ラジオ</option>
-    <option value="sanma">関西ノリ</option>
-  </select>
 </div>
-
+<select id="mode">
+  <option value="normal">通常</option>
+  <option value="teacher">優しい先生</option>
+  <option value="scholar">学者風</option>
+  <option value="kansai">関西ベテラン</option>
+  <option value="coach">体育会コーチ</option>
+</select>
 <textarea id="script">今日は商談でアドバイザーにかなり任せました
 でも最後にまとめたくなってしまいました
 少し校長先生っぽかったかもしれません</textarea>
@@ -113,22 +112,44 @@ const templates = {
 };
 
 function generate() {
-  const mode = document.getElementById("mode").value;
-  const text = document.getElementById("script").value;
-  const lines = text
-    .split(/\n|。|！|!|？|\?/)
-    .map(line => line.trim())
-    .filter(Boolean);
+  stopRead();
 
+  const text = document.getElementById("script").value;
+  const mode = document.getElementById("mode").value;
+  const lines = text.split("\n").filter(line => line.trim() !== "");
   const output = document.getElementById("output");
+
   output.innerHTML = "";
 
-  const roast = templates[mode];
+  const templates = {
+    normal: [
+      ["本日も校長先生の朝礼が始まりました", "いやまだ会議始まったばかりです"],
+      ["まとめたくなる病が発症しました", "その病名まだ医学会通ってません"]
+    ],
+    teacher: [
+      ["まとめたくなったんですね", "ちゃんと考えてる証拠ですね"],
+      ["少し前に出ちゃいました", "でも責任感の裏返しかもしれません"]
+    ],
+    scholar: [
+      ["興味深い自己介入ですね", "観察対象が自分になってます"],
+      ["会議における要約衝動が発現しました", "査読前の仮説です"]
+    ],
+    kansai: [
+      ["またまとめ始まったで", "誰もまだ頼んでへん"],
+      ["前のめりやなぁ", "議事録担当ちゃうやろ"]
+    ],
+    coach: [
+      ["出たぞまとめ癖", "気合いで引っ込めろ"],
+      ["前出すぎだ", "一回ベンチ戻れ"]
+    ]
+  };
+
+  const selected = templates[mode] || templates.normal;
 
   lines.forEach((line, i) => {
-    const t = roast[i % roast.length];
-    addLine("ボケ", t[0]);
-    addLine("ツッコミ", t[1]);
+    const template = selected[i % selected.length];
+    addLine("ボケ", template[0]);
+    addLine("ツッコミ", template[1]);
     addLine("本人談", line);
   });
 }
