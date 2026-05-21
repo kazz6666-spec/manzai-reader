@@ -51,18 +51,38 @@ button {
 <div id="output"></div>
 
 <script>
-function generate() {
+function generate() {function generate() {
   const text = document.getElementById("script").value;
-  const lines = text.split("\n");
+  const lines = text.split("\n").filter(line => line.trim() !== "");
   const output = document.getElementById("output");
   output.innerHTML = "";
 
+  const roastTemplates = [
+    ["本日も校長先生の朝礼が始まりました", "いやまだ会議始まったばかりです"],
+    ["まとめたくなる病が発症しました", "その病名まだ医学会通ってません"],
+    ["アドバイザーに任せたはずなのに存在感だけ出しました", "一番扱いづらいタイプです"],
+    ["また閉会式だけ参加しに来ました", "文化祭の校長か"],
+    ["営業という名の自己ツッコミ会場です", "それはもはや独演会です"],
+    ["今日も役割を背負ってしまいました", "勝手にランドセル増やさないでください"]
+  ];
+
   lines.forEach((line, i) => {
-    const role = i % 2 === 0 ? "ボケ" : "ツッコミ";
-    const div = document.createElement("div");
-    div.className = "line";
-    div.innerHTML = "<strong>" + role + "</strong> " + line;
-    output.appendChild(div);
+    const template = roastTemplates[i % roastTemplates.length];
+
+    const div1 = document.createElement("div");
+    div1.className = "line";
+    div1.innerHTML = "<strong>ボケ</strong> " + template[0];
+    output.appendChild(div1);
+
+    const div2 = document.createElement("div");
+    div2.className = "line";
+    div2.innerHTML = "<strong>ツッコミ</strong> " + template[1];
+    output.appendChild(div2);
+
+    const div3 = document.createElement("div");
+    div3.className = "line";
+    div3.innerHTML = "<strong>本人談</strong> " + line;
+    output.appendChild(div3);
   });
 }
 
