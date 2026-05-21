@@ -17,6 +17,7 @@ textarea {
   height: 220px;
   padding: 12px;
   font-size: 16px;
+  box-sizing: border-box;
 }
 button {
   padding: 12px 20px;
@@ -32,6 +33,12 @@ button {
   padding: 12px;
   margin: 10px 0;
   border-radius: 10px;
+  line-height: 1.7;
+}
+.role {
+  display: inline-block;
+  min-width: 4.5em;
+  font-weight: bold;
 }
 </style>
 </head>
@@ -47,13 +54,14 @@ button {
 
 <button onclick="generate()">漫才化</button>
 <button onclick="playAll()">全部読む</button>
+<button onclick="stopRead()">停止</button>
 
 <div id="output"></div>
 
 <script>
-function generate() {function generate() {
+function generate() {
   const text = document.getElementById("script").value;
-  const lines = text.split("\n").filter(line => line.trim() !== "");
+  const lines = text.split(/\n|。|！|!|？|\?/).map(line => line.trim()).filter(Boolean);
   const output = document.getElementById("output");
   output.innerHTML = "";
 
@@ -63,45 +71,56 @@ function generate() {function generate() {
     ["アドバイザーに任せたはずなのに存在感だけ出しました", "一番扱いづらいタイプです"],
     ["また閉会式だけ参加しに来ました", "文化祭の校長か"],
     ["営業という名の自己ツッコミ会場です", "それはもはや独演会です"],
-    ["今日も役割を背負ってしまいました", "勝手にランドセル増やさないでください"]
+    ["今日も役割を背負ってしまいました", "勝手にランドセル増やさないでください"],
+    ["正しさがネクタイを締めて歩いてきました", "人間はエクセルのセルじゃありません"]
   ];
 
   lines.forEach((line, i) => {
     const template = roastTemplates[i % roastTemplates.length];
-
-    const div1 = document.createElement("div");
-    div1.className = "line";
-    div1.innerHTML = "<strong>ボケ</strong> " + template[0];
-    output.appendChild(div1);
-
-    const div2 = document.createElement("div");
-    div2.className = "line";
-    div2.innerHTML = "<strong>ツッコミ</strong> " + template[1];
-    output.appendChild(div2);
-
-    const div3 = document.createElement("div");
-    div3.className = "line";
-    div3.innerHTML = "<strong>本人談</strong> " + line;
-    output.appendChild(div3);
+    addLine("ボケ", template[0]);
+    addLine("ツッコミ", template[1]);
+    addLine("本人談", line);
   });
 }
 
+function addLine(role, text) {
+  const output = document.getElementById("output");
+  const div = document.createElement("div");
+  div.className = "line";
+
+  const roleSpan = document.createElement("span");
+  roleSpan.className = "role";
+  roleSpan.textContent = role;
+
+  const textSpan = document.createElement("span");
+  textSpan.textContent = text;
+
+  div.appendChild(roleSpan);
+  div.appendChild(textSpan);
+  output.appendChild(div);
+}
+
 function playAll() {
-  const blocks = document.querySelectorAll(".line");
+  stopRead();
+  const blocks = Array.from(document.querySelectorAll(".line span:last-child"));
   let i = 0;
 
   function speakNext() {
     if (i >= blocks.length) return;
-    const utter = new SpeechSynthesisUtterance(blocks[i].innerText);
+    const utter = new SpeechSynthesisUtterance(blocks[i].textContent);
     utter.lang = "ja-JP";
-    utter.onend = () => {
+    utter.onend = function() {
       i++;
-      speakNext();
+      setTimeout(speakNext, 200);
     };
     speechSynthesis.speak(utter);
   }
 
   speakNext();
+}
+
+function stopRead() {
+  speechSynthesis.cancel();
 }
 </script>
 
