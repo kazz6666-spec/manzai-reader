@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111111">
 <title>漫才リーダー</title>
+
 <style>
 body {
   font-family: sans-serif;
@@ -12,6 +14,7 @@ body {
   padding: 20px;
   background: #f5f5f5;
 }
+
 textarea {
   width: 100%;
   height: 220px;
@@ -19,15 +22,20 @@ textarea {
   font-size: 16px;
   box-sizing: border-box;
 }
-button {
-  padding: 12px 20px;
+
+button, select {
+  padding: 12px 16px;
   margin: 8px 8px 8px 0;
   font-size: 16px;
   border: none;
   border-radius: 10px;
+}
+
+button {
   background: black;
   color: white;
 }
+
 .line {
   background: white;
   padding: 12px;
@@ -35,16 +43,34 @@ button {
   border-radius: 10px;
   line-height: 1.7;
 }
+
 .role {
   display: inline-block;
   min-width: 4.5em;
   font-weight: bold;
 }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
 </style>
 </head>
+
 <body>
 
 <h1>漫才リーダー</h1>
+
+<div class="toolbar">
+  <select id="mode">
+    <option value="principal">校長先生皮肉</option>
+    <option value="consultant">冷酷コンサル</option>
+    <option value="radio">深夜ラジオ</option>
+    <option value="sanma">関西ノリ</option>
+  </select>
+</div>
 
 <textarea id="script">今日は商談でアドバイザーにかなり任せました
 でも最後にまとめたくなってしまいました
@@ -59,32 +85,54 @@ button {
 <div id="output"></div>
 
 <script>
+const templates = {
+  principal: [
+    ["本日も校長先生の朝礼が始まりました", "いやまだ会議始まったばかりです"],
+    ["まとめたくなる病が発症しました", "その病名まだ医学会通ってません"],
+    ["アドバイザーに任せたはずなのに存在感だけ出しました", "一番扱いづらいタイプです"]
+  ],
+
+  consultant: [
+    ["非効率な自己顕示が確認されました", "会議コストを増やしています"],
+    ["役割分担の崩壊です", "組織設計からやり直しましょう"],
+    ["感情でまとめに入りました", "データはどこですか"]
+  ],
+
+  radio: [
+    ["今夜も自意識のAM放送です", "スポンサーは不在です"],
+    ["しんみり始まったのに急に仕切り出しました", "情緒が忙しいですね"],
+    ["深夜テンションで自己分析が加速しています", "寝てください"]
+  ],
+
+  sanma: [
+    ["出た出たまた前出るやつや", "ほんでまとめんでええて"],
+    ["任せた言うてめっちゃ出てくるやん", "それ任せてへんねん"],
+    ["ちょい出るどころかまあまあ出とる", "自己申告が甘いねん"]
+  ]
+};
+
 function generate() {
+  const mode = document.getElementById("mode").value;
   const text = document.getElementById("script").value;
-  const lines = text.split(/\n|。|！|!|？|\?/).map(line => line.trim()).filter(Boolean);
+  const lines = text
+    .split(/\n|。|！|!|？|\?/)
+    .map(line => line.trim())
+    .filter(Boolean);
+
   const output = document.getElementById("output");
   output.innerHTML = "";
 
-  const roastTemplates = [
-    ["本日も校長先生の朝礼が始まりました", "いやまだ会議始まったばかりです"],
-    ["まとめたくなる病が発症しました", "その病名まだ医学会通ってません"],
-    ["アドバイザーに任せたはずなのに存在感だけ出しました", "一番扱いづらいタイプです"],
-    ["また閉会式だけ参加しに来ました", "文化祭の校長か"],
-    ["営業という名の自己ツッコミ会場です", "それはもはや独演会です"],
-    ["今日も役割を背負ってしまいました", "勝手にランドセル増やさないでください"],
-    ["正しさがネクタイを締めて歩いてきました", "人間はエクセルのセルじゃありません"]
-  ];
+  const roast = templates[mode];
 
   lines.forEach((line, i) => {
-    const template = roastTemplates[i % roastTemplates.length];
-    addLine("ボケ", template[0]);
-    addLine("ツッコミ", template[1]);
+    const t = roast[i % roast.length];
+    addLine("ボケ", t[0]);
+    addLine("ツッコミ", t[1]);
     addLine("本人談", line);
   });
 }
 
 function addLine(role, text) {
-  const output = document.getElementById("output");
   const div = document.createElement("div");
   div.className = "line";
 
@@ -97,15 +145,17 @@ function addLine(role, text) {
 
   div.appendChild(roleSpan);
   div.appendChild(textSpan);
-  output.appendChild(div);
+
+  document.getElementById("output").appendChild(div);
 }
 
 function playAll() {
   stopRead();
+
   const lines = Array.from(document.querySelectorAll(".line"));
   let i = 0;
 
-  function speakNext() {
+  function next() {
     if (i >= lines.length) return;
 
     const role = lines[i].querySelector(".role").textContent;
@@ -115,11 +165,11 @@ function playAll() {
     utter.lang = "ja-JP";
 
     if (role === "ボケ") {
-      utter.pitch = 1.25;
+      utter.pitch = 1.35;
       utter.rate = 1.05;
     } else if (role === "ツッコミ") {
-      utter.pitch = 0.85;
-      utter.rate = 1.15;
+      utter.pitch = 0.75;
+      utter.rate = 1.18;
     } else {
       utter.pitch = 1.0;
       utter.rate = 0.95;
@@ -127,13 +177,13 @@ function playAll() {
 
     utter.onend = function() {
       i++;
-      setTimeout(speakNext, 250);
+      setTimeout(next, 250);
     };
 
     speechSynthesis.speak(utter);
   }
 
-  speakNext();
+  next();
 }
 
 function stopRead() {
