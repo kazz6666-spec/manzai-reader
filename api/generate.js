@@ -5,29 +5,6 @@ export default async function handler(req, res) {
 
   const { text, mode } = req.body || {};
 
-  const prompt = `
-あなたは漫才変換専門AIです
-入力文をもとにJSONだけ返してください
-
-{
-  "items": [
-    {"role":"ボケ","text":"..."},
-    {"role":"ツッコミ","text":"..."},
-    {"role":"本人談","text":"..."},
-    {"role":"改善コメント","text":"..."}
-  ]
-}
-
-条件
-日本語
-短くテンポよく
-皮肉は愛ある範囲
-mode ${mode}
-
-入力
-${text}
-`;
-
   try {
     const r = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
@@ -36,19 +13,40 @@ ${text}
         "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        input: prompt
+        model: "gpt-4o-mini",
+        input: [
+          {
+            role: "system",
+            content: "あなたは漫才変換専門AIです。必ずJSONだけを返してください。"
+          },
+          {
+            role: "user",
+            content: `入力文を漫才風に変換してください。mode=${mode} 入力=${text}`
+          }
+        ],
+        text: {
+          format: {
+            type: "json_object"
+          }
+        }
       })
     });
 
     const data = await r.json();
-    const raw = data.output_text || "{}";
-    const parsed = JSON.parse(raw);
 
-    res.status(200).json(parsed);
+    if (!r.ok) {
+      return res.status(500).json({
+        error: "OpenAI API error",
+        detail: data
+      });
+    }
+
+    const parsed = JSON.parse(data.output_text);
+
+    return res.status(200).json(parsed);
 
   } catch (e) {
-    res.status(500).json({
+    return res.status(500).json({
       error: "AI生成失敗",
       detail: String(e)
     });
